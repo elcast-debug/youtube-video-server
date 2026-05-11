@@ -1,12 +1,9 @@
 FROM node:20-alpine
 
 # Install system dependencies and yt-dlp
-RUN apk add --no-cache \
-    python3 \
-    py3-pip \
-    ffmpeg \
-    curl \
-    && pip3 install --no-cache-dir yt-dlp
+RUN apk add --no-cache python3 ffmpeg curl && \
+    curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
+    chmod +x /usr/local/bin/yt-dlp
 
 WORKDIR /app
 COPY package*.json ./
