@@ -34,10 +34,19 @@ app.get('/:videoId', async (req, res) => {
       const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
       console.log(`Downloading: ${youtubeUrl}`);
 
-      await execAsync(
-        `yt-dlp -f "bestvideo[height<=1080]+bestaudio/best" -o "${videoPath}" "${youtubeUrl}"`,
-        { timeout: 600000 }
-      );
+      try {
+        const { stdout, stderr } = await execAsync(
+          `yt-dlp -f "bestvideo[height<=1080]+bestaudio/best" -o "${videoPath}" "${youtubeUrl}"`,
+          { timeout: 600000, maxBuffer: 10 * 1024 * 1024 }
+        );
+        if (stderr) console.log(`yt-dlp stderr: ${stderr}`);
+        if (stdout) console.log(`yt-dlp stdout: ${stdout}`);
+      } catch (execError) {
+        console.error(`yt-dlp execution failed:`, execError.message);
+        if (execError.stderr) console.error(`stderr: ${execError.stderr}`);
+        if (execError.stdout) console.error(`stdout: ${execError.stdout}`);
+        throw new Error(`Failed to download video: ${execError.message}`);
+      }
     }
 
     const stat = await import('fs').then(m => m.promises.stat(videoPath));
@@ -66,8 +75,8 @@ app.get('/:videoId', async (req, res) => {
 
     createReadStream(videoPath).pipe(res);
   } catch (error) {
-    console.error(`Error: ${error.message}`);
-    res.status(500).json({ error: 'Failed to process video' });
+    console.error(`Error processing video ${videoId}:`, error.message);
+    res.status(500).json({ error: 'Failed to process video', details: error.message });
   }
 });
 
