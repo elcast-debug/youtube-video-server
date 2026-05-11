@@ -36,7 +36,7 @@ app.get('/:videoId', async (req, res) => {
 
       try {
         const { stdout, stderr } = await execAsync(
-          `yt-dlp -f "bestvideo[height<=1080]+bestaudio/best" -o "${videoPath}" "${youtubeUrl}"`,
+          `yt-dlp --js-runtimes node -f "bestvideo[height<=1080]+bestaudio/best" -o "${videoPath}" "${youtubeUrl}"`,
           { timeout: 600000, maxBuffer: 10 * 1024 * 1024 }
         );
         if (stderr) console.log(`yt-dlp stderr: ${stderr}`);
